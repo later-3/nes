@@ -12,4 +12,4 @@ run:$(objs)
 
 .PHONY:clean
 clean:
-	rm -rf $(objs)
+	rm -rf $(objs) $(program)
