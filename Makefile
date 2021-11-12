@@ -1,8 +1,10 @@
-objs := main.o sfc_famicom.o
-program := fc
-CFLAGS += -c -Wall -g
+path4o = objs
+objs := $(path4o)/main.o $(path4o)/sfc_famicom.o
+program := bin/fc
+INCLUDE += include
+CFLAGS += -c -Wall -g -I $(INCLUDE)
 
-%.o:%.c
+$(path4o)/%.o:%.c
 	$(CC) $(CFLAGS) $^ -o $@
 
 run:$(objs)
@@ -10,4 +12,4 @@ run:$(objs)
 
 .PHONY:clean
 clean:
-	rm -rf *.o fc
+	rm -rf $(objs)
