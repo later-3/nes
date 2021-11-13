@@ -20,30 +20,33 @@ int sfc_is_right_nes(uint32_t id)
     head.id[1] = 'E';
     head.id[2] = 'S';
     head.id[3] = '\x1A';
-    return head.u32 == id?0:1;
+    return head.u32 == id ? 0 : 1;
 }
 
-/// 加载默认测试ROM
+// 加载默认测试ROM
 sfc_ecode sfc_load_default_rom(void *arg, sfc_rom_info_t *info)
 {
     int res;
     assert(info->data_prgrom == NULL && "FREE FIRST");
     FILE *const file = fopen(arg, "rb");
 
-    if (file == NULL) {
+    if (file == NULL)
+    {
         return SFC_ERROR_FILE_NOT_FOUND;
     }
 
     sfc_ecode code = SFC_ERROR_ILLEGAL_FILE;
     // 读取文件头
     sfc_nes_header_t nes_header;
-    if (!fread(&nes_header, sizeof(nes_header), 1, file)) {
+    if (!fread(&nes_header, sizeof(nes_header), 1, file))
+    {
         printf("read nes file failed\n");
         goto err;
     }
 
     res = sfc_is_right_nes(nes_header.id);
-    if (res) {
+    if (res)
+    {
         printf("wrong nes file\n");
         goto err;
     }
@@ -51,7 +54,8 @@ sfc_ecode sfc_load_default_rom(void *arg, sfc_rom_info_t *info)
     const size_t size2 = 8 * 1024 * nes_header.count_chrrom_8kb;
     uint8_t *const ptr = (uint8_t *)malloc(size1 + size2);
     // 内存申请成功
-    if (ptr == NULL) {
+    if (ptr == NULL)
+    {
         code = SFC_ERROR_OUT_OF_MEMORY;
         goto err;
     }
@@ -82,11 +86,37 @@ err:
 
 sfc_ecode sfc_free_default_rom(void *arg, sfc_rom_info_t *info)
 {
-    if (info->data_prgrom) {
-        free(info->data_prgrom);
-        info->data_prgrom = NULL;
+    if (info->data_prgrom == NULL) {
+        goto out;
     }
+    
+    free(info->data_prgrom);
+    info->data_prgrom = NULL;
+out:
     return SFC_ERROR_OK;
+}
+
+// StepFC: 加载ROM
+sfc_ecode sfc_load_new_rom(sfc_famicom_t *famicom)
+{
+    // 先释放旧的ROM
+    sfc_ecode code = famicom->interfaces.free_rom(famicom->argument, &famicom->rom_info);
+    // 清空数据
+    memset(&famicom->rom_info, 0, sizeof(famicom->rom_info));
+    // 载入ROM
+    if (code == SFC_ERROR_OK) {
+        code = famicom->interfaces.load_rom(famicom->argument, &famicom->rom_info);
+    }
+
+    // 载入新的Mapper
+    if (code == SFC_ERROR_OK) {
+        code = sfc_load_mapper(famicom, famicom->rom_info.mapper_number);
+    }
+    // 首次重置
+    if (code == SFC_ERROR_OK) {
+        famicom->mapper.reset(famicom);
+    }
+    return code;
 }
 
 sfc_ecode sfc_famicom_init(sfc_famicom_t *famicom, void *argument, const sfc_interface_t *interfaces)
@@ -96,28 +126,38 @@ sfc_ecode sfc_famicom_init(sfc_famicom_t *famicom, void *argument, const sfc_int
     // 载入默认接口
     famicom->interfaces.load_rom = sfc_load_default_rom;
     famicom->interfaces.free_rom = sfc_free_default_rom;
-    // 清空数据
-    memset(&famicom->rom_info, 0, sizeof(famicom->rom_info));
+
+    // 初步BANK
+    famicom->prg_banks[0] = famicom->main_memory;
+    famicom->prg_banks[3] = famicom->save_memory;
+
     // 提供了接口
-    if (interfaces) {
-        const int count = sizeof(*interfaces) / sizeof(interfaces->load_rom);
-        // 复制有效的函数指针
-        // UB: C标准并不一定保证sizeof(void*)等同sizeof(fp) (非冯体系)
-        //     所以这里声明了一个sfc_funcptr_t
-        sfc_funcptr_t *const func_src = (sfc_funcptr_t *)interfaces;
-        sfc_funcptr_t *const func_des = (sfc_funcptr_t *)&famicom->interfaces;
-        for (int i = 0; i != count; ++i)
-            if (func_src[i])
-                func_des[i] = func_src[i];
+    if (interfaces == NULL)
+    {
+        goto out;
     }
 
-    return famicom->interfaces.load_rom(argument, &famicom->rom_info);
+    const int count = sizeof(*interfaces) / sizeof(interfaces->load_rom);
+    // 复制有效的函数指针
+    // UB: C标准并不一定保证sizeof(void*)等同sizeof(fp) (非冯体系)
+    //     所以这里声明了一个sfc_funcptr_t
+    sfc_funcptr_t *const func_src = (sfc_funcptr_t *)interfaces;
+    sfc_funcptr_t *const func_des = (sfc_funcptr_t *)&famicom->interfaces;
+    for (int i = 0; i != count; ++i)
+    {
+        if (func_src[i])
+        {
+            func_des[i] = func_src[i];
+        }
+    }
+
+out:
+    return sfc_load_new_rom(famicom);
+    // return famicom->interfaces.load_rom(argument, &famicom->rom_info);
 }
 
-/// StepFC: 反初始化famicom
+// StepFC: 反初始化famicom
 void sfc_famicom_uninit(sfc_famicom_t *famicom)
 {
     famicom->interfaces.free_rom(famicom->argument, &famicom->rom_info);
 }
-
-

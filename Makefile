@@ -1,5 +1,5 @@
 path4o = objs
-objs := $(path4o)/main.o $(path4o)/sfc_famicom.o
+objs := $(path4o)/main.o $(path4o)/sfc_famicom.o $(path4o)/cpu.o
 program := bin/fc
 INCLUDE += include
 CFLAGS += -c -Wall -g -I $(INCLUDE)
