@@ -4,7 +4,7 @@
 #include "sfc_cpu.h"
 #include "sfc_famicom.h"
 
-#define NES_PATH "./resources/nestest.nes"
+#define NES_PATH "/home/later/Projects/nes/resources/nestest.nes"
 
 int main()
 {
@@ -13,9 +13,9 @@ int main()
     memset(&famicom, 0, sizeof(struct sfc_famicom));
 
     code = sfc_famicom_init(&famicom, NES_PATH, NULL);
-    if (code != SFC_ERROR_OK) {
+    if (code != SFC_OK) {
         printf("famicom init failed\n");
-        goto err;
+        goto out;
     }
 
     printf("ROM: PRG-ROM: %d x 16kb   CHR-ROM %d x 8kb   Mapper: %03d\n", (int)famicom.rom_info.count_prgrom16kb, 
@@ -37,7 +37,7 @@ int main()
     );
     
     getchar();
-err:
+out:
     sfc_famicom_uninit(&famicom);
     return code;
 }

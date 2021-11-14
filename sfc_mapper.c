@@ -53,7 +53,7 @@ static sfc_ecode sfc_mapper_00_reset(sfc_famicom_t* famicom) {
     sfc_load_prgrom_8k(famicom, 1, 1);
     sfc_load_prgrom_8k(famicom, 2, id2 + 0);
     sfc_load_prgrom_8k(famicom, 3, id2 + 1);
-    return SFC_ERROR_OK;
+    return SFC_OK;
 }
 
 /// <summary>
@@ -63,5 +63,5 @@ static sfc_ecode sfc_mapper_00_reset(sfc_famicom_t* famicom) {
 /// <returns></returns>
 sfc_ecode sfc_load_mapper_00(sfc_famicom_t* famicom) {
     famicom->mapper.reset = sfc_mapper_00_reset;
-    return SFC_ERROR_OK;
+    return SFC_OK;
 }

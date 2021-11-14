@@ -6,7 +6,7 @@
 /// 错误码
 /// </summary>
 typedef enum sfc_error_code {
-    SFC_ERROR_OK = 0,
+    SFC_OK = 0,
     SFC_ERROR_FAILED,
     SFC_ERROR_MAPPER_NOT_FOUND,
     SFC_ERROR_FILE_NOT_FOUND,

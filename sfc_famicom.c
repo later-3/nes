@@ -31,23 +31,20 @@ sfc_ecode sfc_load_default_rom(void *arg, sfc_rom_info_t *info)
     assert(info->data_prgrom == NULL && "FREE FIRST");
     FILE *const file = fopen(arg, "rb");
 
-    if (file == NULL)
-    {
+    if (file == NULL) {
         return SFC_ERROR_FILE_NOT_FOUND;
     }
 
     sfc_ecode code = SFC_ERROR_ILLEGAL_FILE;
     // 读取文件头
     sfc_nes_header_t nes_header;
-    if (!fread(&nes_header, sizeof(nes_header), 1, file))
-    {
+    if (!fread(&nes_header, sizeof(nes_header), 1, file)) {
         printf("read nes file failed\n");
         goto err;
     }
 
     res = sfc_is_right_nes(nes_header.id);
-    if (res)
-    {
+    if (res) {
         printf("wrong nes file\n");
         goto err;
     }
@@ -55,15 +52,16 @@ sfc_ecode sfc_load_default_rom(void *arg, sfc_rom_info_t *info)
     const size_t size2 = 8 * 1024 * nes_header.count_chrrom_8kb;
     uint8_t *const ptr = (uint8_t *)malloc(size1 + size2);
     // 内存申请成功
-    if (ptr == NULL)
-    {
+    if (ptr == NULL) {
         code = SFC_ERROR_OUT_OF_MEMORY;
         goto err;
     }
     // TODO: 实现Trainer
     // 跳过Trainer数据
-    if (nes_header.control1 & SFC_NES_TRAINER)
+    if (nes_header.control1 & SFC_NES_TRAINER) {
         fseek(file, 512, SEEK_CUR);
+    }
+    
     // 这都错了就不关我的事情了
     fread(ptr, size1 + size2, 1, file);
 
@@ -79,7 +77,7 @@ sfc_ecode sfc_load_default_rom(void *arg, sfc_rom_info_t *info)
     assert(!(nes_header.control1 & SFC_NES_TRAINER) && "unsupported");
     assert(!(nes_header.control2 & SFC_NES_VS_UNISYSTEM) && "unsupported");
     assert(!(nes_header.control2 & SFC_NES_Playchoice10) && "unsupported");
-    code = SFC_ERROR_OK;
+    code = SFC_OK;
 err:
     fclose(file);
     return code;
@@ -94,7 +92,7 @@ sfc_ecode sfc_free_default_rom(void *arg, sfc_rom_info_t *info)
     free(info->data_prgrom);
     info->data_prgrom = NULL;
 out:
-    return SFC_ERROR_OK;
+    return SFC_OK;
 }
 
 // StepFC: 加载ROM
@@ -105,16 +103,16 @@ sfc_ecode sfc_load_new_rom(sfc_famicom_t *famicom)
     // 清空数据
     memset(&famicom->rom_info, 0, sizeof(famicom->rom_info));
     // 载入ROM
-    if (code == SFC_ERROR_OK) {
+    if (code == SFC_OK) {
         code = famicom->interfaces.load_rom(famicom->argument, &famicom->rom_info);
     }
 
     // 载入新的Mapper
-    if (code == SFC_ERROR_OK) {
+    if (code == SFC_OK) {
         code = sfc_load_mapper(famicom, famicom->rom_info.mapper_number);
     }
     // 首次重置
-    if (code == SFC_ERROR_OK) {
+    if (code == SFC_OK) {
         famicom->mapper.reset(famicom);
     }
     return code;
@@ -133,8 +131,7 @@ sfc_ecode sfc_famicom_init(sfc_famicom_t *famicom, void *argument, const sfc_int
     famicom->prg_banks[3] = famicom->save_memory;
 
     // 提供了接口
-    if (interfaces == NULL)
-    {
+    if (interfaces == NULL) {
         goto out;
     }
 
@@ -144,10 +141,8 @@ sfc_ecode sfc_famicom_init(sfc_famicom_t *famicom, void *argument, const sfc_int
     //     所以这里声明了一个sfc_funcptr_t
     sfc_funcptr_t *const func_src = (sfc_funcptr_t *)interfaces;
     sfc_funcptr_t *const func_des = (sfc_funcptr_t *)&famicom->interfaces;
-    for (int i = 0; i != count; ++i)
-    {
-        if (func_src[i])
-        {
+    for (int i = 0; i != count; ++i) {
+        if (func_src[i]) {
             func_des[i] = func_src[i];
         }
     }
