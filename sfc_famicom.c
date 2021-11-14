@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sfc_famicom.h"
+#include "sfc_mapper.h"
 
 union nes_header
 {
@@ -89,7 +90,7 @@ sfc_ecode sfc_free_default_rom(void *arg, sfc_rom_info_t *info)
     if (info->data_prgrom == NULL) {
         goto out;
     }
-    
+
     free(info->data_prgrom);
     info->data_prgrom = NULL;
 out:

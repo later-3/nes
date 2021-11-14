@@ -1,0 +1,21 @@
+{
+    "tasks": [
+        {
+            "label": "make run",
+            "type": "shell",
+            "command": "make run",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "make clean",
+            "type": "shell",
+            "command": "make clean",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+    ],
+    "version": "2.0.0"
+}
