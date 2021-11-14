@@ -4,7 +4,7 @@
 #include "sfc_cpu.h"
 #include "sfc_famicom.h"
 
-#define NES_PATH "/home/later/code/fc/resources/nestest.nes"
+#define NES_PATH "./resources/nestest.nes"
 
 int main()
 {
